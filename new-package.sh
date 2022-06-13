@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # 创建新 package
 
+github_repository_url="https://github.com/fxtaoo/golib/tree/master"
+
 while true ; do
   read -rp "package 名称：" package_name
   if [[ ! -d $package_name ]] ; then
@@ -23,7 +25,7 @@ echo -e "$content" > ./${package_name}.go
 echo -e "$content" > ./${package_name}_test.go
 echo -e "# ${package_name} \n ${intro}" > ./README.md)
 
-echo -e "\n[${package_name}](./${package_name}/README.md) ${intro}">> ./README.md
+echo -e "\n[${package_name}](${github_repository_url}/${package_name}/README.md) ${intro}">> ./README.md
 
 
 
