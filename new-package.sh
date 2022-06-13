@@ -23,7 +23,7 @@ echo -e "$content" > ./${package_name}.go
 echo -e "$content" > ./${package_name}_test.go
 echo -e "# ${package_name} \n ${intro}" > ./README.md)
 
-echo -e "\n[${package_name}](${package_name}/README.md) ${intro}">> ./README.md
+echo -e "\n[${package_name}](./${package_name}/README.md) ${intro}">> ./README.md
 
 
 
