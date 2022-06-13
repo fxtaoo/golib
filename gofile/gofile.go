@@ -27,8 +27,8 @@ func TomlFileRead(str string, v interface{}) {
 	}
 }
 
-// 从当前目录文件名为 str CSV文件读数据
-// 接收数据列表，改数据列表数据追加函数
+// 从当前目录文件名为 str CSV 文件读数据
+// 返回数据切片
 func CSVFileRead(str string) [][]string {
 	str = IsAbsStr(str)
 
