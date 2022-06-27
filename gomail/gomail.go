@@ -1,5 +1,5 @@
 // 发送邮件
-package goemail
+package gomail
 
 import (
 	"crypto/tls"
