@@ -2,7 +2,7 @@
 package monitor
 
 import (
-	"strconv"
+	"fmt"
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
@@ -11,8 +11,13 @@ import (
 )
 
 type Warn struct {
-	Name    string // 什么告警
-	Content string // 告警内容
+	Time    time.Time // 告警时间
+	Content string    // 告警内容
+}
+
+// 两个 Warn 间隔时间是否超过 num 分钟
+func (w *Warn) TimeSubCompare(warn *Warn, num float64) bool {
+	return warn.Time.Sub(w.Time).Minutes() > num
 }
 
 // 超出 num 使用率持续 3 分钟（每 10s 采样一次 ） CPU 告警
@@ -37,7 +42,7 @@ func CpuUsage(num float64) (Warn, error) {
 			return warn, nil
 		}
 	}
-	warn = Warn{"cpu", "使用率超过 " + strconv.FormatFloat(num, 'g', 2, 64) + "% 持续一分钟"}
+	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续一分钟\n", int(num))}
 	return warn, nil
 }
 
@@ -51,31 +56,30 @@ func NumUsage(num float64) (Warn, error) {
 
 	used := 100 - float64(v.Available)/float64(v.Total)*100
 	if used > num {
-		warn = Warn{"内存", "使用率超过 " + strconv.FormatFloat(num, 'g', 2, 64) + "%"}
-		return warn, nil
-	} else {
-		return warn, nil
+		warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% \n", int(num))}
 	}
+	return warn, nil
 }
 
 // 超出 num 使用率，磁盘告警
-func DiskUsage(num float64) ([]Warn, error) {
-	var warnList []Warn
+func DiskUsage(num float64) (Warn, error) {
+	var warn Warn
 	partitions, err := disk.Partitions(false)
 	if err != nil {
-		return warnList, err
+		return warn, err
 	}
 
 	for _, e := range partitions {
 		info, err := disk.Usage(e.Mountpoint)
 		if err != nil {
-			return warnList, err
+			return warn, err
 		}
 
 		used := float64(info.Used) / float64(info.Total) * 100
 		if used > num {
-			warnList = append(warnList, Warn{e.Device, "使用率超过 " + strconv.FormatFloat(num, 'g', 2, 64) + "%"})
+			warn.Content += fmt.Sprintf("%s 使用率超过 %d%% \n", e.Device, int(num))
+			warn.Time = time.Now()
 		}
 	}
-	return warnList, nil
+	return warn, nil
 }
