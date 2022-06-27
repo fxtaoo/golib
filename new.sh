@@ -14,7 +14,7 @@ done
 
 read -rp "package 信息：" intro
 
-content="//t $intro
+content="// $intro
 package $package_name
 
 "
@@ -23,9 +23,10 @@ package $package_name
 (mkdir ./$package_name && cd $package_name && \
 echo -e "$content" > ./${package_name}.go
 echo -e "$content" > ./${package_name}_test.go
-echo -e "# ${package_name} \n ${intro}" > ./README.md)
+echo -e "# ${package_name} \n ${intro}\n\n## 实现\n- [ ]"> ./README.md
+touch ./ignore-note)
 
-echo -e "\n[${package_name}](${github_repository_url}/${package_name}) ${intro}">> ./README.md
+echo -e "| [${package_name}](${github_repository_url}/${package_name}) | ${intro} |"  >> ./README.md
 
 
 
