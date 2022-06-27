@@ -1,4 +1,4 @@
-# goemail
+# gomail
 
 发送邮件
 ## 实现
