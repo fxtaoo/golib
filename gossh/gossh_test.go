@@ -1,0 +1,2 @@
+// ssh
+package gossh
