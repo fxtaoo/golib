@@ -15,64 +15,77 @@ type Warn struct {
 	Content string    // 告警内容
 }
 
-// 两个 Warn 间隔时间是否超过 num 分钟
-func (w *Warn) TimeSubCompare(warn *Warn, num float64) bool {
-	return warn.Time.Sub(w.Time).Minutes() > num
+// 检查告警间隔，大于将更新告警
+// checkFun 检查函数，maxNum 最大使用率，notifyIntervalTime 告警间隔分钟
+func (w *Warn) Check(checkFun func(float64) (*Warn, error), maxNum, notifyIntervalTime float64) (bool, error) {
+
+	warnTmp, err := checkFun(maxNum)
+	if err != nil {
+		return false, err
+	}
+
+	// 两个 Warn 间隔时间是否超过 notifyIntervalTime 分钟
+	if warnTmp.Time.Sub(w.Time).Minutes() > notifyIntervalTime {
+		*w = *warnTmp
+		return true, nil
+	}
+	return false, nil
 }
 
 // 超出 num 使用率持续 3 分钟（每 10s 采样一次 ） CPU 告警
-func CpuUsage(num float64) (Warn, error) {
+func CpuUsage(num float64) (*Warn, error) {
 	var warn Warn
-	var tfList [18]bool
+	var sampling [18]bool
 
-	for i := range tfList {
+	for range sampling {
 		v, err := cpu.Percent(10*time.Millisecond, false)
 		if err != nil {
-			return warn, err
+			return &warn, err
 		}
 
-		if v[0] > num {
-			tfList[i] = true
+		// cpu 使用率小于 num，没有告警
+		if v[0] < num {
+			return &warn, nil
 		}
 		time.Sleep(10 * time.Second)
 	}
+	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续 3 分钟\n", int(num))}
+	return &warn, nil
+}
 
-	for _, e := range tfList {
-		if !e {
-			return warn, nil
+// 超出 num 使用率持续 3 分钟（每 10s 采样一次 ） 内存 告警
+func NumUsage(num float64) (*Warn, error) {
+	var warn Warn
+	var sampling [18]bool
+
+	for range sampling {
+		v, err := mem.VirtualMemory()
+		if err != nil {
+			return &warn, err
+		}
+
+		used := 100 - float64(v.Available)/float64(v.Total)*100
+		if used < num {
+			return &warn, nil
 		}
 	}
-	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续一分钟\n", int(num))}
-	return warn, nil
+
+	warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% 持续 3 分钟\n", int(num))}
+	return &warn, nil
 }
 
-// 超出 num 使用率，内存告警
-func NumUsage(num float64) (Warn, error) {
-	var warn Warn
-	v, err := mem.VirtualMemory()
-	if err != nil {
-		return warn, err
-	}
-
-	used := 100 - float64(v.Available)/float64(v.Total)*100
-	if used > num {
-		warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% \n", int(num))}
-	}
-	return warn, nil
-}
-
-// 超出 num 使用率，磁盘告警
-func DiskUsage(num float64) (Warn, error) {
+// 超出 num 使用率，磁盘 告警
+func DiskUsage(num float64) (*Warn, error) {
 	var warn Warn
 	partitions, err := disk.Partitions(false)
 	if err != nil {
-		return warn, err
+		return &warn, err
 	}
 
 	for _, e := range partitions {
 		info, err := disk.Usage(e.Mountpoint)
 		if err != nil {
-			return warn, err
+			return &warn, err
 		}
 
 		used := float64(info.Used) / float64(info.Total) * 100
@@ -81,5 +94,5 @@ func DiskUsage(num float64) (Warn, error) {
 			warn.Time = time.Now()
 		}
 	}
-	return warn, nil
+	return &warn, nil
 }
