@@ -115,7 +115,7 @@ func RestartStopContainer() (string, error) {
 		if err != nil {
 			return "", err
 		}
-		outPut += fmt.Sprintf("%s docker restart %s\n", time.Now().Format("2006/01/02 15:04:05"), e)
+		outPut += fmt.Sprintf("docker restart %s\n", e)
 	}
 	return strings.TrimSuffix(outPut, "\n"), nil
 }
@@ -146,5 +146,5 @@ func StartProcess(process *Process) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s 启动 %s", time.Now().Format("2006/01/02 15:04:05"), process.FilePath), nil
+	return fmt.Sprintf("启动 %s", process.FilePath), nil
 }
