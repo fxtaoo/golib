@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -135,9 +136,9 @@ func StartProcess(process *Process) (string, error) {
 		return "", nil
 	}
 
-	// 日志路径缺省 ${HOME}/monitorNohup.out
+	// 日志路径缺省执行文件同目录下 monitorNohup.out
 	if process.LogPath == "" {
-		process.LogPath = fmt.Sprintf("%s/%s", os.Getenv("HOME"), "monitorNohup.out")
+		process.LogPath = filepath.Join(filepath.Dir(os.Args[0]), "monitorNohup.out")
 	}
 
 	cmd = exec.Command("bash", "-c", fmt.Sprintf("nohup %s > %s 2>&1 &", process.FilePath, process.LogPath))
