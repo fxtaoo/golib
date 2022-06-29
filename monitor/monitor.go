@@ -36,10 +36,10 @@ func (w *Warn) Check(checkFun func(float64) (*Warn, error), maxNum, notifyInterv
 	return false, nil
 }
 
-// 超出 num 使用率持续 3 分钟（每 10s 采样一次 ） CPU 告警
+// 超出 num 使用率持续 1 分钟（每 5s 采样一次 ） CPU 告警
 func CpuUsage(num float64) (*Warn, error) {
 	var warn Warn
-	var sampling [18]bool
+	var sampling [12]bool
 
 	for range sampling {
 		v, err := cpu.Percent(10*time.Millisecond, false)
@@ -51,16 +51,17 @@ func CpuUsage(num float64) (*Warn, error) {
 		if v[0] < num {
 			return &warn, nil
 		}
-		time.Sleep(10 * time.Second)
+
+		time.Sleep(5 * time.Second)
 	}
-	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续 3 分钟\n", int(num))}
+	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续 1 分钟\n", int(num))}
 	return &warn, nil
 }
 
-// 超出 num 使用率持续 3 分钟（每 10s 采样一次 ） 内存 告警
+// 超出 num 使用率持续 1 分钟（每 5s 采样一次 ） 内存 告警
 func NumUsage(num float64) (*Warn, error) {
 	var warn Warn
-	var sampling [18]bool
+	var sampling [12]bool
 
 	for range sampling {
 		v, err := mem.VirtualMemory()
@@ -72,9 +73,11 @@ func NumUsage(num float64) (*Warn, error) {
 		if used < num {
 			return &warn, nil
 		}
+
+		time.Sleep(5 * time.Second)
 	}
 
-	warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% 持续 3 分钟\n", int(num))}
+	warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% 持续 1 分钟\n", int(num))}
 	return &warn, nil
 }
 
