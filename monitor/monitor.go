@@ -3,6 +3,9 @@ package monitor
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
@@ -95,4 +98,53 @@ func DiskUsage(num float64) (*Warn, error) {
 		}
 	}
 	return &warn, nil
+}
+
+// 重启停止容器
+func RestartStopContainer() (string, error) {
+	cmd := exec.Command("bash", "-c", "docker ps -a | grep Exited | awk  '{print $NF}'")
+	stopContainer, err := cmd.CombinedOutput()
+	if err != nil || len(stopContainer) == 0 {
+		return "", err
+	}
+
+	outPut := ""
+	for _, e := range strings.Split(strings.TrimSuffix(string(stopContainer), "\n"), "\n") {
+		cmd = exec.Command("bash", "-c", fmt.Sprintf("docker restart %s", e))
+		_, err := cmd.CombinedOutput()
+		if err != nil {
+			return "", err
+		}
+		outPut += fmt.Sprintf("%s docker restart %s\n", time.Now().Format("2006/01/02 15:04:05"), e)
+	}
+	return strings.TrimSuffix(outPut, "\n"), nil
+}
+
+type Process struct {
+	FilePath string // 文件路径
+	LogPath  string // 日志路径（缺省为 ${HOME}/monitorNohup.out）
+}
+
+// 重启停止进程
+// FilePath 进程执行路径列表
+func StartProcess(process *Process) (string, error) {
+	cmd := exec.Command("bash", "-c", "pidof -q "+process.FilePath)
+	_, err := cmd.CombinedOutput()
+	// pidof 没找到返回状态 1，即错误，找到返回状态 0，err 为 nil
+	if err == nil {
+		return "", nil
+	}
+
+	// 日志路径缺省 ${HOME}/monitorNohup.out
+	if process.LogPath == "" {
+		process.LogPath = fmt.Sprintf("%s/%s", os.Getenv("HOME"), "monitorNohup.out")
+	}
+
+	cmd = exec.Command("bash", "-c", fmt.Sprintf("nohup %s > %s 2>&1 &", process.FilePath, process.LogPath))
+	_, err = cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s 启动 %s", time.Now().Format("2006/01/02 15:04:05"), process.FilePath), nil
 }
