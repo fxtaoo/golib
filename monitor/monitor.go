@@ -121,15 +121,10 @@ func RestartStopContainer() (string, error) {
 	return strings.TrimSuffix(outPut, "\n"), nil
 }
 
-type Process struct {
-	FilePath string // 文件路径
-	LogPath  string // 日志路径（缺省为 ${HOME}/monitorNohup.out）
-}
-
 // 重启停止进程
 // FilePath 进程执行路径列表
-func StartProcess(process *Process) (string, error) {
-	cmd := exec.Command("bash", "-c", "pidof -q "+process.FilePath)
+func StartProcess(filePath, logPath string) (string, error) {
+	cmd := exec.Command("bash", "-c", "pidof -q "+filePath)
 	_, err := cmd.CombinedOutput()
 	// pidof 没找到返回状态 1，即错误，找到返回状态 0，err 为 nil
 	if err == nil {
@@ -137,15 +132,15 @@ func StartProcess(process *Process) (string, error) {
 	}
 
 	// 日志路径缺省执行文件同目录下 monitorNohup.out
-	if process.LogPath == "" {
-		process.LogPath = filepath.Join(filepath.Dir(os.Args[0]), "monitorNohup.out")
+	if logPath == "" {
+		logPath = filepath.Join(filepath.Dir(os.Args[0]), "monitorNohup.out")
 	}
 
-	cmd = exec.Command("bash", "-c", fmt.Sprintf("nohup %s > %s 2>&1 &", process.FilePath, process.LogPath))
+	cmd = exec.Command("bash", "-c", fmt.Sprintf("nohup %s > %s 2>&1 &", filePath, logPath))
 	_, err = cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
 
-	return fmt.Sprintf("启动 %s", process.FilePath), nil
+	return fmt.Sprintf("启动 %s", filePath), nil
 }
