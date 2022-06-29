@@ -29,7 +29,7 @@ func (w *Warn) Check(checkFun func(float64) (*Warn, error), maxNum, notifyInterv
 	}
 
 	// 两个 Warn 间隔时间是否超过 notifyIntervalTime 分钟
-	if warnTmp.Time.Sub(w.Time).Minutes() > notifyIntervalTime {
+	if warnTmp.Time.Sub(w.Time).Minutes() > notifyIntervalTime || w.Time.IsZero() {
 		*w = *warnTmp
 		return true, nil
 	}
