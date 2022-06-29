@@ -3,6 +3,7 @@ package gofile
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -56,4 +57,21 @@ func CSVFileRead(str string) ([][]string, error) {
 		csvdata = append(csvdata, row)
 	}
 	return csvdata, nil
+}
+
+// 追加字符串到文件
+func AppendFile(filepath, content string) error {
+	f, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	newLine := content
+	_, err = fmt.Fprintln(f, newLine)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
