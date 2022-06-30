@@ -54,7 +54,7 @@ func CpuUsage(num float64) (*Warn, error) {
 
 		time.Sleep(5 * time.Second)
 	}
-	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续 1 分钟\n", int(num))}
+	warn = Warn{time.Now(), fmt.Sprintf("cpu 使用率超过 %d%% 持续 1 分钟", int(num))}
 	return &warn, nil
 }
 
@@ -77,7 +77,7 @@ func NumUsage(num float64) (*Warn, error) {
 		time.Sleep(5 * time.Second)
 	}
 
-	warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% 持续 1 分钟\n", int(num))}
+	warn = Warn{time.Now(), fmt.Sprintf("内存 使用率超过 %d%% 持续 1 分钟", int(num))}
 	return &warn, nil
 }
 
@@ -97,7 +97,7 @@ func DiskUsage(num float64) (*Warn, error) {
 
 		used := float64(info.Used) / float64(info.Total) * 100
 		if used > num {
-			warn.Content += fmt.Sprintf("%s 使用率超过 %d%% \n", e.Device, int(num))
+			warn.Content += fmt.Sprintf("%s 使用率超过 %d%%", e.Device, int(num))
 			warn.Time = time.Now()
 		}
 	}
