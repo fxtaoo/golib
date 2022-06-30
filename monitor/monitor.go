@@ -22,14 +22,13 @@ type Warn struct {
 // 检查告警间隔，大于将更新告警
 // checkFun 检查函数，maxNum 最大使用率，notifyIntervalTime 告警间隔分钟
 func (w *Warn) Check(checkFun func(float64) (*Warn, error), maxNum, notifyIntervalTime float64) (bool, error) {
-
 	warnTmp, err := checkFun(maxNum)
 	if err != nil {
 		return false, err
 	}
 
 	// 两个 Warn 间隔时间是否超过 notifyIntervalTime 分钟
-	if warnTmp.Time.Sub(w.Time).Minutes() > notifyIntervalTime || w.Time.IsZero() {
+	if !warnTmp.Time.IsZero() && (warnTmp.Time.Sub(w.Time).Minutes() > notifyIntervalTime || w.Time.IsZero()) {
 		*w = *warnTmp
 		return true, nil
 	}
