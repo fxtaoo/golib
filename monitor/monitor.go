@@ -124,13 +124,22 @@ func RestartStopContainer() (string, error) {
 	return strings.TrimSuffix(outPut, "\n"), nil
 }
 
+// 检查进程是否运行
+// 返回 []pid 字符串数组
+func CheckProcess(filePath string) []string {
+	cmd := exec.Command("bash", "-c", "pidof "+filePath)
+	// pidof 没找到返回状态 1，即错误 err，找到返回状态 0，err 为 nil
+	outPut, _ := cmd.CombinedOutput()
+	if len(outPut) == 0 {
+		return nil
+	}
+	return strings.Split(strings.TrimSuffix(string(outPut), "\n"), " ")
+}
+
 // 重启停止进程
-// FilePath 进程执行路径列表
+// FilePath 执行文件绝对路径
 func StartProcess(filePath, logPath string) (string, error) {
-	cmd := exec.Command("bash", "-c", "pidof -q "+filePath)
-	_, err := cmd.CombinedOutput()
-	// pidof 没找到返回状态 1，即错误，找到返回状态 0，err 为 nil
-	if err == nil {
+	if len(CheckProcess(filePath)) != 0 {
 		return "", nil
 	}
 
@@ -139,11 +148,29 @@ func StartProcess(filePath, logPath string) (string, error) {
 		logPath = filepath.Join(filepath.Dir(os.Args[0]), "monitorNohup.out")
 	}
 
-	cmd = exec.Command("bash", "-c", fmt.Sprintf("nohup %s > %s 2>&1 &", filePath, logPath))
-	_, err = cmd.CombinedOutput()
+	if err := os.Chmod(filePath, 0755); err != nil {
+		return "", err
+	}
+
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("nohup %s > %s 2>&1 &", filePath, logPath))
+	_, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
 	}
 
 	return fmt.Sprintf("启动 %s", filePath), nil
+}
+
+// 进程不存在，执行脚本
+func StartProcessScript(filePath, script string) string {
+	if len(CheckProcess(filePath)) != 0 {
+		return ""
+	}
+	cmd := exec.Command("bash", script)
+	_, err := cmd.CombinedOutput()
+	if err != nil {
+		return ""
+	}
+
+	return fmt.Sprintf("执行脚本 %s", script)
 }
