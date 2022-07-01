@@ -1,5 +1,5 @@
 // 监控相关
-package monitor
+package gomonitor
 
 import (
 	"fmt"
