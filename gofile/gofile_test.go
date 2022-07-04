@@ -1,2 +1,2 @@
-// 文件读写
+// 文件相关
 package gofile

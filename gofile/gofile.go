@@ -1,12 +1,18 @@
-// 文件读写
+// 文件相关
 package gofile
 
 import (
+	"crypto/md5"
 	"encoding/csv"
+	"encoding/hex"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"path"
 	"path/filepath"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -74,4 +80,81 @@ func AppendFile(filepath, content string) error {
 	}
 
 	return nil
+}
+
+const tmpFileNamePrefix = "gofileTmpFile"
+
+// 下载文件（缺省下载目录未临时文件夹）
+func DownloadFile(url string, filePath string) (string, error) {
+	var file *os.File
+	var err error
+
+	if filePath == "" {
+		file, err = ioutil.TempFile("", tmpFileNamePrefix)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		file, err = os.Create(filePath)
+		if err != nil {
+			return "", err
+		}
+	}
+	defer file.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(file, resp.Body)
+	if err != nil {
+		return "", err
+	}
+	return file.Name(), nil
+}
+
+// 文件 MD5
+func FileMD5(filePath string) (string, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	hash := md5.New()
+	_, _ = io.Copy(hash, file)
+	return hex.EncodeToString(hash.Sum(nil)), nil
+}
+
+// 比较线上文件与本地文件是否一致
+func OnlineLocalMD5Same(url, localFilePath string) (bool, error) {
+
+	localMD5, err := FileMD5(localFilePath)
+	if err != nil {
+		return false, err
+	}
+
+	onlineFilePath, err := DownloadFile(url, "")
+	if err != nil {
+		return false, err
+	}
+
+	defer func(onlineFilePath string) {
+		// 删除临时文件
+		if strings.HasPrefix(path.Base(onlineFilePath), tmpFileNamePrefix) {
+			os.Remove(onlineFilePath)
+		}
+	}(onlineFilePath)
+
+	onlineMD5, err := FileMD5(onlineFilePath)
+	if err != nil {
+		return false, err
+	}
+
+	if localMD5 == onlineMD5 {
+		return true, nil
+	}
+
+	return false, nil
 }
