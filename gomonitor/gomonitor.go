@@ -96,7 +96,7 @@ func DiskUsage(num float64) (*Warn, error) {
 
 		used := float64(info.Used) / float64(info.Total) * 100
 		if used > num {
-			warn.Content += fmt.Sprintf("%s 使用率超过 %d%%", e.Device, int(num))
+			warn.Content += fmt.Sprintf("%s 使用率超过 %d%%  ", e.Device, int(num))
 			warn.Time = time.Now()
 		}
 	}
