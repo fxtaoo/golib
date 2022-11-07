@@ -14,7 +14,8 @@
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
-**/conf.toml
 **/main
-**/ignore*
+**/conf.toml
+**/conf.json
+**/np*
 **/tmp

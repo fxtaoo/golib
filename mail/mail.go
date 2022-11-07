@@ -1,5 +1,5 @@
 // 发送邮件
-package gomail
+package mail
 
 import (
 	"crypto/tls"
@@ -10,38 +10,34 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
-type Smtp struct {
-	Host         string
-	Port         int
-	User, UserPW string
-}
-
 type Mail struct {
-	To         string // 接收邮箱
-	Subject    string // 主题
-	Body       string // 内容
-	AttachPath string // 附件路径
+	To         []string // 接收邮箱
+	Subject    string   // 主题
+	Body       string   // 内容
+	AttachPath string   // 附件路径
 }
 
-// 发送单封邮件
-func SendEmail(smtp *Smtp, mail *Mail) error {
+// 发送邮件
+func (mail *Mail) Send(s *Smtp) error {
 	// 收件人不能为空
-	if mail.To == "" {
+	if len(mail.To) == 0 {
 		return fmt.Errorf("%#v can not empty", mail.To)
 	}
 
 	m := gomail.NewMessage()
 
-	m.SetHeader("From", smtp.User)
-	m.SetHeader("To", mail.To)
-	m.SetHeader("Subject", mail.Subject)
-	m.SetBody("text/html", mail.Body)
+	m.SetHeaders(map[string][]string{
+		"From":      {m.FormatAddress(s.User, "通知")},
+		"To":        mail.To,
+		"Subject":   {mail.Subject},
+		"text/html": {mail.Body},
+	})
 
 	if mail.AttachPath != "" {
 		m.Attach(mail.AttachPath)
 	}
 
-	e := gomail.NewDialer(smtp.Host, smtp.Port, smtp.User, smtp.UserPW)
+	e := gomail.NewDialer(s.Host, s.Port, s.User, s.UserPW)
 	e.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 	if err := e.DialAndSend(m); err != nil {
 		// 失败暂停 1s 重发
@@ -53,15 +49,19 @@ func SendEmail(smtp *Smtp, mail *Mail) error {
 	return nil
 }
 
-// 发送单封邮件给多人
-func SendEmailMP(smtp *Smtp, mail *Mail, mailList []string) []error {
+// 单独发送邮件给每一个人
+func (mail *Mail) SendAlone(s *Smtp) []error {
 	var errList []error
-	for _, to := range mailList {
-		mail.To = to
-		if err := SendEmail(smtp, mail); err != nil {
+	tmpMail := Mail{
+		Subject:    mail.Subject,
+		Body:       mail.Body,
+		AttachPath: mail.AttachPath,
+	}
+	for _, to := range mail.To {
+		tmpMail.To[0] = to
+		if err := tmpMail.Send(s); err != nil {
 			errList = append(errList, err)
 		}
-
 		// 间隔 0.5 秒
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -72,10 +72,9 @@ func SendEmailMP(smtp *Smtp, mail *Mail, mailList []string) []error {
 func SendEmailList(smtp *Smtp, mail []Mail) []error {
 	var errList []error
 	for _, m := range mail {
-		if err := SendEmail(smtp, &m); err != nil {
+		if err := m.Send(smtp); err != nil {
 			errList = append(errList, err)
 		}
-
 		// 间隔 0.5 秒
 		time.Sleep(500 * time.Millisecond)
 	}
@@ -85,8 +84,8 @@ func SendEmailList(smtp *Smtp, mail []Mail) []error {
 // 发送单封邮件，相关信息从参数读取
 // 参数顺序固定
 // 依次为：SMTP：Host、Port、User、UserPW，邮件：接收邮箱、主题、内容,以上为 7 项必填
-// 可选参数：邮件：、附件路径
-func SendEmailSmtpMail(info ...string) error {
+// 可选参数：邮件：附件路径
+func SendEmail(info ...string) error {
 	if len(info) < 7 {
 		return fmt.Errorf("%#v Missing parameter", info)
 	}
@@ -99,7 +98,7 @@ func SendEmailSmtpMail(info ...string) error {
 	smtp.Port, _ = strconv.Atoi(info[1])
 
 	mail := &Mail{
-		To:      info[4],
+		To:      []string{info[4]},
 		Subject: info[5],
 		Body:    info[6],
 	}
@@ -107,7 +106,7 @@ func SendEmailSmtpMail(info ...string) error {
 		mail.AttachPath = info[7]
 	}
 
-	if err := SendEmail(smtp, mail); err != nil {
+	if err := mail.Send(smtp); err != nil {
 		return err
 	}
 

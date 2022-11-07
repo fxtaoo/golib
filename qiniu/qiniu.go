@@ -1,5 +1,5 @@
 // 七牛云相关
-package goqiniu
+package qiniu
 
 import (
 	"github.com/qiniu/go-sdk/v7/auth/qbox"

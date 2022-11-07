@@ -1,7 +1,0 @@
-[smtp]
-# smtp 地址端口
-Host   = "Host"
-Port   = 465
-# 发送邮件邮箱账号密码
-User   = "User"
-UserPW = "UserPW"
