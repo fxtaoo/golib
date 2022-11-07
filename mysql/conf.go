@@ -12,7 +12,7 @@ type Mysql struct {
 		Db     string `json:"db"`
 		User   string `json:"user"`
 		PassWd string `json:"passWd"`
-	}
+	} `json:"conf"`
 	DB *sql.DB `json:"-"`
 }
 
