@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// 从 CSV 文件读数据
+// CSV 文件读数据
 func CSVRead(filePath string) ([][]string, error) {
 	filePath = FileAbsPath(filePath)
 

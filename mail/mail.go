@@ -85,7 +85,7 @@ func SendEmailList(smtp *Smtp, mail []Mail) []error {
 	return errList
 }
 
-// 发送单封邮件，相关信息从参数读取
+// 发送邮件，相关配置信息从参数读取
 // 参数顺序固定
 // 依次为：SMTP：Host、Port、Address、UserPW，Name 邮件：接收邮箱、主题、内容,以上为 8 项必填
 // 可选参数：邮件：附件路径

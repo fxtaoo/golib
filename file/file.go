@@ -89,7 +89,7 @@ func FileMD5(filePath string) (string, error) {
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }
 
-// 本地线上文件比较
+// 文件本地线上比较
 func FileLocalOnline(localFilePath, url string) (bool, error) {
 
 	localMD5, err := FileMD5(localFilePath)
