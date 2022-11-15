@@ -31,11 +31,12 @@ func (mail *Mail) Send(s *Smtp) error {
 	}
 
 	m.SetHeaders(map[string][]string{
-		"From":      {m.FormatAddress(s.Address, s.Name)},
-		"To":        mail.To,
-		"Subject":   {mail.Subject},
-		"text/html": {mail.Body},
+		"From":    {m.FormatAddress(s.Address, s.Name)},
+		"To":      mail.To,
+		"Subject": {mail.Subject},
 	})
+
+	m.SetBody("text/html", mail.Body)
 
 	if mail.AttachPath != "" {
 		m.Attach(mail.AttachPath)
@@ -57,6 +58,7 @@ func (mail *Mail) Send(s *Smtp) error {
 func (mail *Mail) SendAlone(s *Smtp) []error {
 	var errList []error
 	tmpMail := Mail{
+		To:         make([]string, 1),
 		Subject:    mail.Subject,
 		Body:       mail.Body,
 		AttachPath: mail.AttachPath,
