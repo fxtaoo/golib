@@ -8,7 +8,7 @@ import (
 
 // CSV 文件读数据
 func CSVRead(filePath string) ([][]string, error) {
-	filePath = FileAbsPath(filePath)
+	filePath = AbsPath(filePath)
 
 	csvFile, err := os.Open(filePath)
 	if err != nil {

@@ -14,7 +14,7 @@ import (
 )
 
 // 文件绝对路径
-func FileAbsPath(filePath string) string {
+func AbsPath(filePath string) string {
 	if filepath.IsAbs(filePath) {
 		return filePath
 	}
@@ -22,7 +22,7 @@ func FileAbsPath(filePath string) string {
 }
 
 // 文件末尾追加内容
-func FileAppendContent(filePath, content string) error {
+func AppendContent(filePath, content string) error {
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY|os.O_CREATE, 0644)
 	if err != nil {
 		return err
@@ -39,7 +39,7 @@ func FileAppendContent(filePath, content string) error {
 }
 
 // 下载文件（缺省下载目录为临时文件夹）
-func FileDownload(url string, tmpFilePath string) (string, error) {
+func Download(url string, tmpFilePath string) (string, error) {
 	var file *os.File
 	var err error
 
@@ -70,7 +70,7 @@ func FileDownload(url string, tmpFilePath string) (string, error) {
 }
 
 // 删除临时文件
-func FileTmpDel(filePath string) {
+func TmpDel(filePath string) {
 	// 检查是不是临时文件
 	if strings.HasPrefix(path.Base(filePath), TmpFileNamePrefix) {
 		os.Remove(filePath)
@@ -78,7 +78,7 @@ func FileTmpDel(filePath string) {
 }
 
 // 文件 MD5
-func FileMD5(filePath string) (string, error) {
+func MD5(filePath string) (string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return "", err
@@ -90,21 +90,21 @@ func FileMD5(filePath string) (string, error) {
 }
 
 // 文件本地线上比较
-func FileLocalOnline(localFilePath, url string) (bool, error) {
+func LocalOnline(localFilePath, url string) (bool, error) {
 
-	localMD5, err := FileMD5(localFilePath)
+	localMD5, err := MD5(localFilePath)
 	if err != nil {
 		return false, err
 	}
 
-	onlineFilePath, err := FileDownload(url, "")
+	onlineFilePath, err := Download(url, "")
 	if err != nil {
 		return false, err
 	}
 
-	defer FileTmpDel(onlineFilePath)
+	defer TmpDel(onlineFilePath)
 
-	onlineMD5, err := FileMD5(onlineFilePath)
+	onlineMD5, err := MD5(onlineFilePath)
 	if err != nil {
 		return false, err
 	}
