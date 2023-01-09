@@ -5,5 +5,5 @@ type Smtp struct {
 	Port    int    `json:"port"`
 	Address string `json:"address"`
 	PassWd  string `json:"passWd"`
-	Name    string `json:"user"`
+	Name    string `json:"name"`
 }
