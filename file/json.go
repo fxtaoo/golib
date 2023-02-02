@@ -17,3 +17,12 @@ func JsonInitValue(filePath string, v interface{}) error {
 	}
 	return nil
 }
+
+func JsonSaveValue(filePath string, v interface{}) error {
+	byte, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	os.WriteFile(filePath, byte, 0666)
+	return nil
+}
